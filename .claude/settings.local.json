@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "PowerShell(Get-Command node -ErrorAction SilentlyContinue; Get-Command npm -ErrorAction SilentlyContinue; $env:PATH -split ';' | Where-Object { $_ -match 'node' })",
+      "PowerShell(Get-ChildItem \"C:\\\\Program Files\\\\nodejs\" -ErrorAction SilentlyContinue; Get-ChildItem \"$env:APPDATA\\\\npm\" -ErrorAction SilentlyContinue; Test-Path \"C:\\\\Program Files\\\\nodejs\\\\npm.cmd\")",
+      "PowerShell($env:PATH = [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"PATH\", \"User\"\\); npm --version)",
+      "PowerShell(cmd /c \"cd /d D:\\\\Dev\\\\React\\\\Photoalbum && npm install\")"
+    ]
+  }
+}

@@ -1,0 +1,107 @@
+.page {
+  min-height: 100vh;
+  background: #1a1510;
+}
+
+.header {
+  background: var(--spine);
+  padding: 0 40px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+}
+
+.logo {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--cream);
+  letter-spacing: 0.02em;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.userEmail {
+  font-size: 13px;
+  color: #c4b49a;
+}
+
+.btnLogout {
+  background: transparent;
+  border: 1px solid #7a6a55;
+  color: #c4b49a;
+  border-radius: 3px;
+  padding: 6px 14px;
+  font-size: 13px;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.btnLogout:hover {
+  border-color: var(--cream);
+  color: var(--cream);
+}
+
+.main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 48px 40px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 36px;
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--cream);
+}
+
+.btnCreate {
+  background: var(--accent);
+  color: var(--cream);
+  border: none;
+  border-radius: 3px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.btnCreate:hover {
+  background: var(--accent-hover);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 28px;
+}
+
+.empty {
+  text-align: center;
+  padding: 80px 0;
+}
+
+.emptyTitle {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-style: italic;
+  color: #c4b49a;
+  margin-bottom: 12px;
+}
+
+.emptyText {
+  font-size: 14px;
+  color: #7a6a55;
+}

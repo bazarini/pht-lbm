@@ -1,0 +1,65 @@
+.page {
+  background: var(--cream);
+  border-radius: 4px;
+  padding: 20px;
+  display: flex;
+  gap: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.number {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--cream-dark);
+  min-width: 36px;
+  text-align: center;
+  padding-top: 4px;
+  user-select: none;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.caption {
+  border: 1px solid #d4c9b5;
+  border-radius: 3px;
+  padding: 10px 12px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--caption-color);
+  background: #fff;
+  resize: vertical;
+  min-height: 64px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.caption:focus {
+  border-color: var(--accent);
+}
+
+.caption::placeholder {
+  color: #c4b49a;
+}
+
+.btnDelete {
+  align-self: flex-end;
+  background: transparent;
+  border: 1px solid #d4c9b5;
+  color: var(--text-secondary);
+  border-radius: 3px;
+  padding: 6px 12px;
+  font-size: 12px;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.btnDelete:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}

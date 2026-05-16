@@ -1,0 +1,94 @@
+.card {
+  background: var(--cream);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: var(--shadow-page);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.28);
+}
+
+.cover {
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  display: block;
+}
+
+.coverEmpty {
+  width: 100%;
+  aspect-ratio: 4/3;
+  background: var(--cream-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--caption-color);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-style: italic;
+}
+
+.body {
+  padding: 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--spine);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.btnEdit {
+  flex: 1;
+  background: var(--spine);
+  color: var(--cream);
+  border: none;
+  border-radius: 3px;
+  padding: 8px;
+  font-size: 13px;
+  transition: background 0.15s;
+}
+
+.btnEdit:hover {
+  background: var(--spine-accent);
+}
+
+.btnDelete {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  border-radius: 3px;
+  padding: 8px 12px;
+  font-size: 13px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btnDelete:hover {
+  background: var(--danger);
+  color: #fff;
+}
