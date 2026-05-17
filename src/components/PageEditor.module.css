@@ -48,6 +48,51 @@
   color: #c4b49a;
 }
 
+.positionBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.positionLabel {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.preview {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3/4;
+  background: var(--cream-dark);
+  border: 1px solid #d4c9b5;
+  border-radius: 3px;
+  overflow: hidden;
+  user-select: none;
+}
+
+.previewImg {
+  position: absolute;
+  width: 55%;
+  height: auto;
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  border: 6px solid #fff;
+  border-radius: 1px;
+  transition: box-shadow 0.15s;
+}
+
+.previewImg:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+
+.grabbing {
+  cursor: grabbing !important;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.35) !important;
+}
+
 .btnDelete {
   align-self: flex-end;
   background: transparent;

@@ -111,21 +111,27 @@ export default function BookViewer({ album }) {
   )
 }
 
-function PhotoPage({ page, pageNum, side }) {
+function PhotoPage({ page, pageNum }) {
+  const photoX = page.photoX ?? 50
+  const photoY = page.photoY ?? 50
+
   return (
     <>
       {page.photo ? (
-        <div className={styles.photoWrapper}>
+        <div
+          className={styles.photoWrapper}
+          style={{ left: `${photoX}%`, top: `${photoY}%` }}
+        >
           <img className={styles.photo} src={page.photo} alt={page.caption || 'Фото'} />
         </div>
       ) : (
         <div className={styles.photoEmpty}>Нет фото</div>
       )}
       {page.caption && (
-        <>
+        <div className={styles.captionBlock}>
           <div className={styles.divider} />
           <p className={styles.caption}>{page.caption}</p>
-        </>
+        </div>
       )}
       <span className={styles.pageNum}>{pageNum}</span>
     </>

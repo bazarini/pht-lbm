@@ -104,11 +104,14 @@
 
 /* ---- Photo page ---- */
 .photoWrapper {
-  width: 100%;
-  padding: 10px;
+  position: absolute;
+  width: 62%;
+  padding: 8px;
   background: #fff;
   box-shadow: 0 2px 16px rgba(0,0,0,0.18), inset 0 0 0 1px #e0d8c8;
   border-radius: 2px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
 }
 
 .photo {
@@ -129,6 +132,17 @@
   font-family: var(--font-display);
   font-style: italic;
   font-size: 14px;
+}
+
+.captionBlock {
+  position: absolute;
+  bottom: 24px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
 .caption {

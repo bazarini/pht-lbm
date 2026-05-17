@@ -27,7 +27,7 @@ export default function EditorPage() {
   }
 
   function addPage() {
-    setPages([...album.pages, { id: crypto.randomUUID(), photo: null, caption: '' }])
+    setPages([...album.pages, { id: crypto.randomUUID(), photo: null, caption: '', photoX: 50, photoY: 50 }])
   }
 
   function updatePage(index, page) {
