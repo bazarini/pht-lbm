@@ -96,11 +96,11 @@
 .flipCorner {
   position: absolute;
   bottom: 0;
-  width: 56px;
-  height: 56px;
+  width: 90px;
+  height: 90px;
   z-index: 20;
   pointer-events: none;
-  overflow: visible;
+  overflow: hidden; /* clip the fold div */
 }
 
 .flipCornerLeft  { left: 0; }
@@ -111,57 +111,73 @@
   cursor: pointer;
 }
 
+/* Current page number — sits in the corner, hidden by the fold on hover */
 .cornerNum {
   position: absolute;
   z-index: 2;
-  font-size: 12px;
+  font-size: 16px;
   color: #8a7a65;
   font-family: var(--font-display);
   font-style: italic;
   pointer-events: none;
   line-height: 1;
+  transition: opacity 0.18s ease;
 }
 
-.flipCornerLeft  .cornerNum { bottom: 13px; left: 14px; }
-.flipCornerRight .cornerNum { bottom: 13px; right: 14px; }
+.flipCornerLeft  .cornerNum { bottom: 18px; left: 18px; }
+.flipCornerRight .cornerNum { bottom: 18px; right: 18px; }
 
-/* ---- Corner fold animation on hover ---- */
-.flipCornerActive::after {
-  content: '';
+/* Hide current number when fold is open */
+.flipCornerActive:hover .cornerNum { opacity: 0; }
+
+/* ---- Fold div (clip-path triangle, can contain text) ---- */
+.cornerFold {
   position: absolute;
   bottom: 0;
   width: 0;
   height: 0;
-  border-style: solid;
-  border-width: 0;
-  border-color: transparent;
+  background: #e8e0d4;
+  box-shadow: -3px -3px 8px rgba(0,0,0,0.14);
+  transition: width 0.25s ease, height 0.25s ease;
+  overflow: hidden;
   pointer-events: none;
-  transition: border-width 0.22s ease, opacity 0.22s ease;
-  opacity: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
 }
 
-/* Right corner: fold reveals from bottom-right */
-.flipCornerRight.flipCornerActive::after {
-  right: 0;
-}
-.flipCornerRight.flipCornerActive:hover::after {
-  opacity: 1;
-  border-width: 0 0 38px 38px;
-  /* bottom = shadow on page surface; left = back of page (slightly warm off-white) */
-  border-color: transparent transparent rgba(120,100,80,0.18) #ede6dc;
-  filter: drop-shadow(-1px -1px 4px rgba(0,0,0,0.14));
-}
-
-/* Left corner: mirror image fold from bottom-left */
-.flipCornerLeft.flipCornerActive::after {
+.flipCornerLeft  .cornerFold {
   left: 0;
+  clip-path: polygon(0% 0%, 100% 100%, 0% 100%);
+  align-items: flex-end;
+  justify-content: flex-start;
 }
-.flipCornerLeft.flipCornerActive:hover::after {
-  opacity: 1;
-  border-width: 0 38px 38px 0;
-  border-color: transparent #ede6dc rgba(120,100,80,0.18) transparent;
-  filter: drop-shadow(1px -1px 4px rgba(0,0,0,0.14));
+
+.flipCornerRight .cornerFold {
+  right: 0;
+  clip-path: polygon(100% 0%, 100% 100%, 0% 100%);
+  align-items: flex-end;
+  justify-content: flex-end;
 }
+
+.flipCornerActive:hover .cornerFold {
+  width: 90px;
+  height: 90px;
+}
+
+/* Peek number inside the fold */
+.cornerFoldNum {
+  position: absolute;
+  font-size: 18px;
+  font-family: var(--font-display);
+  font-style: italic;
+  color: #7a6a58;
+  pointer-events: none;
+  line-height: 1;
+}
+
+.flipCornerLeft  .cornerFoldNum { bottom: 14px; left: 14px; transform: rotate(0deg); }
+.flipCornerRight .cornerFoldNum { bottom: 14px; right: 14px; transform: rotate(0deg); }
 
 /* Empty page hint */
 .emptyPage {

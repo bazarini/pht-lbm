@@ -129,6 +129,11 @@ export default function BookViewer({
                       onClick={canPrev && !flipping ? () => flip('back') : undefined}
                     >
                       <span className={styles.cornerNum}>{leftIdx + 1}</span>
+                      <div className={styles.cornerFold}>
+                        {canPrev && leftIdx - 1 >= 1 && (
+                          <span className={styles.cornerFoldNum}>{leftIdx - 1}</span>
+                        )}
+                      </div>
                     </div>
                   )}
                 </>
@@ -144,6 +149,11 @@ export default function BookViewer({
                   onClick={canNext && !flipping ? () => flip('forward') : undefined}
                 >
                   <span className={styles.cornerNum}>{rightIdx + 1}</span>
+                  <div className={styles.cornerFold}>
+                    {canNext && (
+                      <span className={styles.cornerFoldNum}>{rightIdx + 3}</span>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
