@@ -123,7 +123,14 @@ export default function BookViewer({
               ) : (
                 <>
                   {renderPageContents(leftIdx, leftPageRef, rightPageRef, rightIdx)}
-                  {pages[leftIdx] && <span className={styles.pageNum}>{leftIdx + 1}</span>}
+                  {pages[leftIdx] && (
+                    <div
+                      className={`${styles.flipCorner} ${styles.flipCornerLeft} ${canPrev && !flipping ? styles.flipCornerActive : ''}`}
+                      onClick={canPrev && !flipping ? () => flip('back') : undefined}
+                    >
+                      <span className={styles.cornerNum}>{leftIdx + 1}</span>
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -131,7 +138,14 @@ export default function BookViewer({
             {/* Right page */}
             <div ref={rightPageRef} className={`${styles.pageRight} ${isEditing ? styles.pageEditing : ''}`}>
               {renderPageContents(rightIdx, rightPageRef, leftPageRef, leftIdx)}
-              {pages[rightIdx] && <span className={styles.pageNum}>{rightIdx + 1}</span>}
+              {pages[rightIdx] && (
+                <div
+                  className={`${styles.flipCorner} ${styles.flipCornerRight} ${canNext && !flipping ? styles.flipCornerActive : ''}`}
+                  onClick={canNext && !flipping ? () => flip('forward') : undefined}
+                >
+                  <span className={styles.cornerNum}>{rightIdx + 1}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -175,22 +189,6 @@ export default function BookViewer({
         </div>
       </div>
 
-      {/* Navigation */}
-      <div className={styles.nav}>
-        <button
-          className={styles.navBtn}
-          onClick={() => flip('back')}
-          disabled={!canPrev || !!flipping}
-        >←</button>
-        <span className={styles.navInfo}>
-          {spread === 0 ? 'Обложка' : `Разворот ${spread} / ${totalSpreads - 1}`}
-        </span>
-        <button
-          className={styles.navBtn}
-          onClick={() => flip('forward')}
-          disabled={!canNext || !!flipping}
-        >→</button>
-      </div>
     </>
   )
 }
