@@ -67,8 +67,9 @@ export default function TransformablePhoto({
         const inside = ev.clientX >= pr.left && ev.clientX <= pr.right
                     && ev.clientY >= pr.top  && ev.clientY <= pr.bottom
         if (!inside) {
-          const bx = Math.max(2, Math.min(98, ((ev.clientX - br.left) / br.width)  * 100))
-          const by = Math.max(2, Math.min(98, ((ev.clientY - br.top)  / br.height) * 100))
+          // No clamping — let floating photos appear wherever the cursor released
+          const bx = ((ev.clientX - br.left) / br.width)  * 100
+          const by = ((ev.clientY - br.top)  / br.height) * 100
           onEject?.({ x: bx, y: by })
           return
         }
@@ -87,10 +88,10 @@ export default function TransformablePhoto({
         }
       }
 
-      // Normal: commit clamped position
+      // Page photos: clamp inside page bounds. Floating photos: no clamp.
       onUpdate({
-        x: Math.max(0, Math.min(100, currentX)),
-        y: Math.max(0, Math.min(100, currentY)),
+        x: coordinateSystem === 'page' ? Math.max(0, Math.min(100, currentX)) : currentX,
+        y: coordinateSystem === 'page' ? Math.max(0, Math.min(100, currentY)) : currentY,
       })
     }
 
