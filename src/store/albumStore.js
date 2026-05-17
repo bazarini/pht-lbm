@@ -15,6 +15,7 @@ const useAlbumStore = create((set, get) => ({
       userId,
       title: 'Новый альбом',
       pages: [],
+      floatingPhotos: [],
       createdAt: Date.now(),
     }
     const albums = [...get().albums, album]

@@ -1,0 +1,140 @@
+.wrapper {
+  position: absolute;
+  transform-origin: center center;
+  user-select: none;
+}
+
+.inner {
+  position: relative;
+  width: 100%;
+}
+
+.frame {
+  background: #fff;
+  padding: 8px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.18), inset 0 0 0 1px #e0d8c8;
+  border-radius: 2px;
+}
+
+.frame img {
+  width: 100%;
+  height: auto;
+  display: block;
+  pointer-events: none;
+}
+
+/* Selection outline */
+.selected .frame {
+  outline: 2px dashed rgba(139, 111, 71, 0.8);
+  outline-offset: 2px;
+}
+
+/* ---- Handles ---- */
+.handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border: 2px solid #8b6f47;
+  border-radius: 2px;
+  z-index: 20;
+}
+
+.handleTL { top: -6px;    left: -6px;   cursor: nw-resize; }
+.handleTR { top: -6px;    right: -6px;  cursor: ne-resize; }
+.handleBL { bottom: -6px; left: -6px;   cursor: sw-resize; }
+.handleBR { bottom: -6px; right: -6px;  cursor: se-resize; }
+
+.rotateHandle {
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border: 2px solid #8b6f47;
+  border-radius: 50%;
+  cursor: crosshair;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #8b6f47;
+}
+
+.rotateLine {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  width: 2px;
+  height: 14px;
+  background: rgba(139,111,71,0.5);
+  transform: translateX(-50%);
+}
+
+.deleteBtn {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 20px;
+  height: 20px;
+  background: #c0392b;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  font-size: 11px;
+  cursor: pointer;
+  z-index: 21;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.deleteBtn:hover {
+  background: #a93226;
+}
+
+/* ---- Caption ---- */
+.captionArea {
+  margin-top: 8px;
+  text-align: center;
+}
+
+.captionText {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--caption-color);
+  line-height: 1.5;
+  cursor: text;
+  min-height: 20px;
+  padding: 2px 4px;
+}
+
+.captionText:hover {
+  background: rgba(139,111,71,0.08);
+  border-radius: 2px;
+}
+
+.captionPlaceholder {
+  color: #c4b49a;
+}
+
+.captionTextarea {
+  width: 100%;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--caption-color);
+  background: rgba(255,255,255,0.8);
+  border: 1px solid #c4b49a;
+  border-radius: 2px;
+  padding: 4px 6px;
+  resize: none;
+  outline: none;
+  text-align: center;
+  min-height: 40px;
+}

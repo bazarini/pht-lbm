@@ -1,80 +1,90 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
+import TransformablePhoto from './TransformablePhoto'
 import styles from './BookViewer.module.css'
 
-export default function BookViewer({ album }) {
-  const pages = album.pages
-  // spread: 0 = cover, 1 = pages 0-1, 2 = pages 2-3, ...
-  const totalSpreads = Math.ceil(pages.length / 2) + 1
+export default function BookViewer({
+  album,
+  isEditing,
+  selectedId,
+  onSelectPhoto,
+  onUpdatePagePhoto,
+  onUpdateFloating,
+  onDeletePagePhoto,
+  onDeleteFloating,
+  onEjectPhoto,
+  onInjectPhoto,
+  onNextSpread,
+}) {
+  const pages = album.pages ?? []
+  const floatingPhotos = album.floatingPhotos ?? []
+
+  const totalSpreads = Math.max(1, Math.ceil(pages.length / 2) + 1)
   const [spread, setSpread] = useState(0)
-  const [flipping, setFlipping] = useState(null) // 'forward' | 'back' | null
+  const [flipping, setFlipping] = useState(null)
 
-  const canPrev = spread > 0
-  const canNext = spread < totalSpreads - 1
+  const bookRef = useRef(null)
+  const leftPageRef = useRef(null)
+  const rightPageRef = useRef(null)
 
-  const flip = useCallback(
-    (dir) => {
-      if (flipping) return
-      if (dir === 'forward' && !canNext) return
-      if (dir === 'back' && !canPrev) return
-      setFlipping(dir)
-      setTimeout(() => {
-        setSpread((s) => (dir === 'forward' ? s + 1 : s - 1))
-        setFlipping(null)
-      }, 700)
-    },
-    [flipping, canNext, canPrev]
-  )
-
-  function getPageContent(pageIndex, pageNumLabel) {
-    const page = pages[pageIndex]
-    if (!page) return <BlankPage />
-    return <PhotoPage page={page} pageNum={pageNumLabel} />
+  // Indices of pages in current spread
+  function getSpreadPageIndices(s) {
+    if (s === 0) return [null, 0]   // left=cover, right=page[0]
+    const li = (s - 1) * 2 + 1
+    return [li, li + 1]
   }
 
-  function renderSpread() {
-    if (spread === 0) {
-      return (
-        <div className={styles.spread}>
-          <div className={`${styles.pageLeft} ${styles.cover}`}>
-            <div className={styles.coverLine} />
-            <div className={styles.coverTitle}>{album.title}</div>
-            <div className={styles.coverLine} />
-            <div className={styles.coverSub}>Фотоальбом</div>
-          </div>
-          <div className={styles.pageRight}>
-            {pages[0] ? (
-              <PhotoPage page={pages[0]} pageNum={1} />
-            ) : (
-              <BlankPage text="Добавьте фото в редакторе" />
-            )}
-          </div>
-        </div>
-      )
-    }
+  const [leftIdx, rightIdx] = getSpreadPageIndices(spread)
 
-    const leftIndex = (spread - 1) * 2 + 1
-    const rightIndex = leftIndex + 1
-    const leftNum = leftIndex + 1
-    const rightNum = rightIndex + 1
+  // canNext: in edit mode — allow if current spread has any photo
+  const spreadHasPhoto = [leftIdx, rightIdx]
+    .filter((i) => i !== null && i >= 0)
+    .some((i) => (pages[i]?.photos?.length ?? 0) > 0)
 
-    return (
-      <div className={styles.spread}>
-        <div className={styles.pageLeft}>
-          {pages[leftIndex] ? (
-            <PhotoPage page={pages[leftIndex]} pageNum={leftNum} side="left" />
-          ) : (
-            <BlankPage />
-          )}
-        </div>
-        <div className={styles.pageRight}>
-          {pages[rightIndex] ? (
-            <PhotoPage page={pages[rightIndex]} pageNum={rightNum} side="right" />
-          ) : (
-            <BlankPage />
-          )}
-        </div>
-      </div>
-    )
+  const canPrev = spread > 0
+  const canNext = isEditing ? spreadHasPhoto : spread < totalSpreads - 1
+
+  const flip = useCallback((dir) => {
+    if (flipping) return
+    if (dir === 'forward' && !canNext) return
+    if (dir === 'back' && !canPrev) return
+
+    setFlipping(dir)
+    setTimeout(() => {
+      if (dir === 'forward') {
+        const nextSpread = spread + 1
+        if (nextSpread >= totalSpreads && isEditing) {
+          onNextSpread?.()
+        }
+        setSpread(nextSpread)
+      } else {
+        setSpread((s) => s - 1)
+      }
+      setFlipping(null)
+    }, 600)
+  }, [flipping, canNext, canPrev, spread, totalSpreads, isEditing, onNextSpread])
+
+  function renderPageContents(pageIdx, pageRef) {
+    if (pageIdx === null) return null // cover left side handled separately
+    const page = pages[pageIdx]
+    if (!page) return null
+
+    return (page.photos ?? []).map((photo) => (
+      <TransformablePhoto
+        key={photo.id}
+        photo={photo}
+        isEditing={isEditing}
+        isSelected={selectedId === photo.id}
+        onSelect={() => onSelectPhoto(photo.id)}
+        onDeselect={() => onSelectPhoto(null)}
+        onUpdate={(patch) => onUpdatePagePhoto(pageIdx, photo.id, patch)}
+        onDelete={() => onDeletePagePhoto(pageIdx, photo.id)}
+        onEject={(bookCoords) => onEjectPhoto(pageIdx, photo.id, bookCoords)}
+        containerRef={pageRef}
+        pageRef={pageRef}
+        bookRef={bookRef}
+        coordinateSystem="page"
+      />
+    ))
   }
 
   const flipClass = flipping === 'forward' ? styles.flippingForward : styles.flippingBack
@@ -82,20 +92,89 @@ export default function BookViewer({ album }) {
   return (
     <>
       <div className={styles.scene}>
-        <div className={styles.book}>
-          {renderSpread()}
+        <div
+          className={styles.book}
+          ref={bookRef}
+          onClick={isEditing ? () => onSelectPhoto(null) : undefined}
+        >
+          {/* ---- Spread ---- */}
+          <div className={styles.spread}>
+            {/* Left page */}
+            <div
+              ref={leftPageRef}
+              className={`${styles.pageLeft} ${spread === 0 ? styles.cover : ''}`}
+            >
+              {spread === 0 ? (
+                <CoverLeft title={album.title} />
+              ) : (
+                <>
+                  {renderPageContents(leftIdx, leftPageRef)}
+                  {pages[leftIdx] && <span className={styles.pageNum}>{leftIdx + 1}</span>}
+                </>
+              )}
+            </div>
+
+            {/* Right page */}
+            <div ref={rightPageRef} className={styles.pageRight}>
+              {spread === 0 && pages[0] === undefined ? (
+                <EmptyPage isEditing={isEditing} />
+              ) : (
+                <>
+                  {renderPageContents(rightIdx, rightPageRef)}
+                  {pages[rightIdx] && <span className={styles.pageNum}>{rightIdx + 1}</span>}
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* ---- Floating layer ---- */}
+          <div
+            className={styles.floatingLayer}
+            style={{ pointerEvents: isEditing ? 'none' : 'none' }}
+          >
+            {floatingPhotos.map((photo) => (
+              <TransformablePhoto
+                key={photo.id}
+                photo={photo}
+                isEditing={isEditing}
+                isSelected={selectedId === photo.id}
+                onSelect={() => onSelectPhoto(photo.id)}
+                onDeselect={() => onSelectPhoto(null)}
+                onUpdate={(patch) => onUpdateFloating(photo.id, patch)}
+                onDelete={() => onDeleteFloating(photo.id)}
+                onInject={(pageCoords) => {
+                  // Determine which page the cursor is on
+                  const lRect = leftPageRef.current?.getBoundingClientRect()
+                  const rRect = rightPageRef.current?.getBoundingClientRect()
+                  // Inject to right page by default (last spread page)
+                  const targetIdx = rightIdx ?? leftIdx
+                  if (targetIdx !== null && targetIdx !== undefined) {
+                    onInjectPhoto(photo.id, targetIdx, pageCoords)
+                  }
+                }}
+                containerRef={bookRef}
+                pageRef={rightPageRef}
+                bookRef={bookRef}
+                coordinateSystem="book"
+              />
+            ))}
+          </div>
+
+          {/* Spine shadow */}
+          <div className={styles.spineShadow} />
+
+          {/* Flip animation overlay */}
           {flipping && <div className={`${styles.flipper} ${flipClass}`} />}
         </div>
       </div>
 
+      {/* Navigation */}
       <div className={styles.nav}>
         <button
           className={styles.navBtn}
           onClick={() => flip('back')}
           disabled={!canPrev || !!flipping}
-        >
-          ←
-        </button>
+        >←</button>
         <span className={styles.navInfo}>
           {spread === 0 ? 'Обложка' : `Разворот ${spread} / ${totalSpreads - 1}`}
         </span>
@@ -103,45 +182,27 @@ export default function BookViewer({ album }) {
           className={styles.navBtn}
           onClick={() => flip('forward')}
           disabled={!canNext || !!flipping}
-        >
-          →
-        </button>
+        >→</button>
       </div>
     </>
   )
 }
 
-function PhotoPage({ page, pageNum }) {
-  const photoX = page.photoX ?? 50
-  const photoY = page.photoY ?? 50
-
+function CoverLeft({ title }) {
   return (
     <>
-      {page.photo ? (
-        <div
-          className={styles.photoWrapper}
-          style={{ left: `${photoX}%`, top: `${photoY}%` }}
-        >
-          <img className={styles.photo} src={page.photo} alt={page.caption || 'Фото'} />
-        </div>
-      ) : (
-        <div className={styles.photoEmpty}>Нет фото</div>
-      )}
-      {page.caption && (
-        <div className={styles.captionBlock}>
-          <div className={styles.divider} />
-          <p className={styles.caption}>{page.caption}</p>
-        </div>
-      )}
-      <span className={styles.pageNum}>{pageNum}</span>
+      <div className={styles.coverLine} />
+      <div className={styles.coverTitle}>{title}</div>
+      <div className={styles.coverLine} />
+      <div className={styles.coverSub}>Фотоальбом</div>
     </>
   )
 }
 
-function BlankPage({ text }) {
+function EmptyPage({ isEditing }) {
   return (
-    <p style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 14, color: '#c4b49a' }}>
-      {text || ''}
+    <p className={styles.emptyPage}>
+      {isEditing ? 'Добавьте фото через кнопку в хедере' : ''}
     </p>
   )
 }

@@ -21,11 +21,7 @@ export default function App() {
       />
       <Route
         path="/album/:id/edit"
-        element={
-          <AuthGuard>
-            <EditorPage />
-          </AuthGuard>
-        }
+        element={<Navigate to="/album/:id/view" replace />}
       />
       <Route
         path="/album/:id/view"

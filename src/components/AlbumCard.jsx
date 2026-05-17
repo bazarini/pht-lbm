@@ -3,7 +3,7 @@ import styles from './AlbumCard.module.css'
 
 export default function AlbumCard({ album, onDelete }) {
   const navigate = useNavigate()
-  const coverPhoto = album.pages[0]?.photo || null
+  const coverPhoto = album.pages[0]?.photos?.[0]?.src || null
   const pageCount = album.pages.length
 
   return (
@@ -19,8 +19,8 @@ export default function AlbumCard({ album, onDelete }) {
           {pageCount} {pluralPages(pageCount)} · {formatDate(album.createdAt)}
         </div>
         <div className={styles.actions}>
-          <button className={styles.btnEdit} onClick={() => navigate(`/album/${album.id}/edit`)}>
-            Редактировать
+          <button className={styles.btnEdit} onClick={() => navigate(`/album/${album.id}/view`)}>
+            Открыть
           </button>
           <button
             className={styles.btnDelete}

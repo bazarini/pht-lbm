@@ -16,7 +16,7 @@ export default function DashboardPage() {
 
   function handleCreate() {
     const album = createAlbum(user.id)
-    navigate(`/album/${album.id}/edit`)
+    navigate(`/album/${album.id}/view`)
   }
 
   function handleLogout() {
