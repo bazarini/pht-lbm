@@ -1,38 +1,46 @@
 import { create } from 'zustand'
-import { getUsers, saveUsers, getSession, saveSession, clearSession } from '../utils/storage'
+import * as auth from '../services/auth'
 
-const useAuthStore = create((set) => ({
-  user: getSession(),
+const useAuthStore = create((set) => {
+  // Bootstrap: load existing session, then subscribe to future changes.
+  // Both run once when the store is first created.
+  auth.getSession().then((user) => set({ user, loading: false }))
 
-  register: (email, password) => {
-    const users = getUsers()
-    if (users.find((u) => u.email === email)) {
-      return { error: 'Пользователь с таким email уже существует' }
-    }
-    const newUser = { id: crypto.randomUUID(), email, password }
-    saveUsers([...users, newUser])
-    const session = { id: newUser.id, email: newUser.email }
-    saveSession(session)
-    set({ user: session })
-    return { ok: true }
-  },
+  const unsubscribe = auth.onAuthChange((user) => set({ user, loading: false }))
+  // unsubscribe is intentionally not called — the store lives for the app lifetime.
+  void unsubscribe
 
-  login: (email, password) => {
-    const users = getUsers()
-    const found = users.find((u) => u.email === email && u.password === password)
-    if (!found) {
-      return { error: 'Неверный email или пароль' }
-    }
-    const session = { id: found.id, email: found.email }
-    saveSession(session)
-    set({ user: session })
-    return { ok: true }
-  },
+  return {
+    user: null,
+    loading: true, // true until getSession() resolves
 
-  logout: () => {
-    clearSession()
-    set({ user: null })
-  },
-}))
+    signUp: async (email, password) => {
+      const result = await auth.signUp(email, password)
+      if (result.error) return result
+      if (!result.needsConfirmation) set({ user: result.user })
+      return result
+    },
+
+    signIn: async (email, password) => {
+      const result = await auth.signIn(email, password)
+      if (result.error) return result
+      set({ user: result.user })
+      return result
+    },
+
+    signInWithGoogle: () => auth.signInWithGoogle(),
+
+    signOut: async () => {
+      await auth.signOut()
+      set({ user: null })
+    },
+
+    // Legacy alias used in DashboardPage — will be cleaned up when supabase-integration merges
+    logout: async () => {
+      await auth.signOut()
+      set({ user: null })
+    },
+  }
+})
 
 export default useAuthStore
