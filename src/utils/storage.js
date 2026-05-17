@@ -1,27 +1,10 @@
+// NOTE: Auth (getUsers/saveUsers/getSession etc.) has been removed —
+// authentication is now handled by Supabase Auth via src/services/auth.js.
+// Album storage (getAlbums/saveAlbums) will be removed once the
+// feat/supabase-integration branch is merged.
+
 const KEYS = {
-  USERS: 'pb_users',
-  SESSION: 'pb_session',
   ALBUMS: 'pb_albums',
-}
-
-export function getUsers() {
-  return JSON.parse(localStorage.getItem(KEYS.USERS) || '[]')
-}
-
-export function saveUsers(users) {
-  localStorage.setItem(KEYS.USERS, JSON.stringify(users))
-}
-
-export function getSession() {
-  return JSON.parse(localStorage.getItem(KEYS.SESSION) || 'null')
-}
-
-export function saveSession(user) {
-  localStorage.setItem(KEYS.SESSION, JSON.stringify(user))
-}
-
-export function clearSession() {
-  localStorage.removeItem(KEYS.SESSION)
 }
 
 // Migrate albums from old format (page.photo) to new format (page.photos[])
@@ -30,7 +13,7 @@ function migrateAlbums(albums) {
     ...album,
     floatingPhotos: album.floatingPhotos ?? [],
     pages: (album.pages ?? []).map((page) => {
-      if (page.photos) return page // already new format
+      if (page.photos) return page
       return {
         id: page.id,
         photos: page.photo
