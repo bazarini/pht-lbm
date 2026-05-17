@@ -127,6 +127,19 @@ export default function ViewerPage() {
     setSelectedId(null)
   }, [album, id, updateAlbum, saveHistory])
 
+  // ---- Transfer (page → sibling page) ----
+  const handleTransferPagePhoto = useCallback((fromPageIdx, toPageIdx, photoId, coords) => {
+    saveHistory()
+    const photo = album.pages[fromPageIdx]?.photos?.find((ph) => ph.id === photoId)
+    if (!photo) return
+    const pages = album.pages.map((p, i) => {
+      if (i === fromPageIdx) return { ...p, photos: p.photos.filter((ph) => ph.id !== photoId) }
+      if (i === toPageIdx)   return { ...p, photos: [...(p.photos ?? []), { ...photo, x: coords.x, y: coords.y }] }
+      return p
+    })
+    updateAlbum(id, { pages })
+  }, [album, id, updateAlbum, saveHistory])
+
   // ---- Eject (page → floating) ----
   const handleEjectPhoto = useCallback((pageIdx, photoId, bookCoords) => {
     saveHistory()
@@ -250,6 +263,7 @@ export default function ViewerPage() {
           onDeleteFloating={handleDeleteFloating}
           onEjectPhoto={handleEjectPhoto}
           onInjectPhoto={handleInjectPhoto}
+          onTransferPagePhoto={handleTransferPagePhoto}
           onNextSpread={handleNextSpread}
         />
       </div>

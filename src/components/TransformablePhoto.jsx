@@ -10,6 +10,8 @@ export default function TransformablePhoto({
   onDelete,
   onEject,
   onInject,
+  onTransferToSibling, // called when page photo dropped on the sibling page in the same spread
+  siblingPageRef,      // the other page in the same spread (or secondary inject target for floats)
   containerRef,
   pageRef,
   bookRef,
@@ -60,14 +62,26 @@ export default function TransformablePhoto({
       window.removeEventListener('mouseup', onUp)
       setDragVisual(null)
 
-      // Eject: cursor released outside page
+      // Eject / transfer: cursor released outside the home page
       if (coordinateSystem === 'page' && pageRef?.current && bookRef?.current) {
         const pr = pageRef.current.getBoundingClientRect()
         const br = bookRef.current.getBoundingClientRect()
         const inside = ev.clientX >= pr.left && ev.clientX <= pr.right
                     && ev.clientY >= pr.top  && ev.clientY <= pr.bottom
         if (!inside) {
-          // No clamping — let floating photos appear wherever the cursor released
+          // Check sibling page first — transfer instead of ejecting to floating
+          if (siblingPageRef?.current && onTransferToSibling) {
+            const spr = siblingPageRef.current.getBoundingClientRect()
+            const insideSibling = ev.clientX >= spr.left && ev.clientX <= spr.right
+                               && ev.clientY >= spr.top  && ev.clientY <= spr.bottom
+            if (insideSibling) {
+              const px = Math.max(5, Math.min(95, ((ev.clientX - spr.left) / spr.width) * 100))
+              const py = Math.max(5, Math.min(95, ((ev.clientY - spr.top)  / spr.height) * 100))
+              onTransferToSibling({ x: px, y: py })
+              return
+            }
+          }
+          // No sibling matched — eject to floating
           const bx = ((ev.clientX - br.left) / br.width)  * 100
           const by = ((ev.clientY - br.top)  / br.height) * 100
           onEject?.({ x: bx, y: by })
@@ -75,16 +89,20 @@ export default function TransformablePhoto({
         }
       }
 
-      // Inject: floating photo released inside a page
-      if (coordinateSystem === 'book' && onInject && pageRef?.current) {
-        const pr = pageRef.current.getBoundingClientRect()
-        const inside = ev.clientX >= pr.left && ev.clientX <= pr.right
-                    && ev.clientY >= pr.top  && ev.clientY <= pr.bottom
-        if (inside) {
-          const px = Math.max(5, Math.min(95, ((ev.clientX - pr.left) / pr.width)  * 100))
-          const py = Math.max(5, Math.min(95, ((ev.clientY - pr.top)  / pr.height) * 100))
-          onInject({ x: px, y: py })
-          return
+      // Inject: floating photo released inside a page (check primary page then sibling)
+      if (coordinateSystem === 'book') {
+        for (const [ref, cb] of [[pageRef, onInject], [siblingPageRef, onTransferToSibling]]) {
+          if (ref?.current && cb) {
+            const pr = ref.current.getBoundingClientRect()
+            const inside = ev.clientX >= pr.left && ev.clientX <= pr.right
+                        && ev.clientY >= pr.top  && ev.clientY <= pr.bottom
+            if (inside) {
+              const px = Math.max(5, Math.min(95, ((ev.clientX - pr.left) / pr.width)  * 100))
+              const py = Math.max(5, Math.min(95, ((ev.clientY - pr.top)  / pr.height) * 100))
+              cb({ x: px, y: py })
+              return
+            }
+          }
         }
       }
 
@@ -97,7 +115,7 @@ export default function TransformablePhoto({
 
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
-  }, [isEditing, photo.x, photo.y, coordinateSystem, containerRef, pageRef, bookRef, onSelect, onUpdate, onEject, onInject])
+  }, [isEditing, photo.x, photo.y, coordinateSystem, containerRef, pageRef, siblingPageRef, bookRef, onSelect, onUpdate, onEject, onInject, onTransferToSibling])
 
   // ---- Resize ----
   const handleResizeStart = useCallback((e) => {
