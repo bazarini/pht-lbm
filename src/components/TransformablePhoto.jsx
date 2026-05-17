@@ -51,7 +51,20 @@ export default function TransformablePhoto({
     let currentX = photo.x
     let currentY = photo.y
 
+    // Returns true if cursor is inside a 90px corner zone of the given page element
+    const inCornerZone = (ev, ref) => {
+      if (!ref?.current) return false
+      const r = ref.current.getBoundingClientRect()
+      const cs = 90 // must match CSS .flipCorner width/height
+      return (ev.clientY > r.bottom - cs) &&
+             (ev.clientX < r.left + cs || ev.clientX > r.right - cs)
+    }
+
     const onMove = (ev) => {
+      // Freeze drag if cursor enters a corner flip zone on any page in this spread
+      if (coordinateSystem === 'page') {
+        if (inCornerZone(ev, pageRef) || inCornerZone(ev, siblingPageRef)) return
+      }
       const dx = ((ev.clientX - e.clientX) / rect.width)  * 100
       const dy = ((ev.clientY - e.clientY) / rect.height) * 100
       currentX = photo.x + dx   // no clamping — let it go outside

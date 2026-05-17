@@ -98,7 +98,7 @@
   bottom: 0;
   width: 90px;
   height: 90px;
-  z-index: 20;
+  z-index: 8; /* below photos (z-index 10+) — photos block hover, appear above corner */
   pointer-events: none;
   overflow: hidden; /* clip the fold div */
 }
