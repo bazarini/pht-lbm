@@ -51,24 +51,39 @@ export default function TransformablePhoto({
     let currentX = photo.x
     let currentY = photo.y
 
-    // Returns true if cursor is inside a 90px corner zone of the given page element
-    const inCornerZone = (ev, ref) => {
-      if (!ref?.current) return false
-      const r = ref.current.getBoundingClientRect()
-      const cs = 90 // must match CSS .flipCorner width/height
-      return (ev.clientY > r.bottom - cs) &&
-             (ev.clientX < r.left + cs || ev.clientX > r.right - cs)
-    }
-
     const onMove = (ev) => {
-      // Freeze drag if cursor enters a corner flip zone on any page in this spread
-      if (coordinateSystem === 'page') {
-        if (inCornerZone(ev, pageRef) || inCornerZone(ev, siblingPageRef)) return
-      }
       const dx = ((ev.clientX - e.clientX) / rect.width)  * 100
       const dy = ((ev.clientY - e.clientY) / rect.height) * 100
-      currentX = photo.x + dx   // no clamping — let it go outside
-      currentY = photo.y + dy
+      const newX = photo.x + dx
+      const newY = photo.y + dy
+
+      // Eject if the photo's physical bounds overlap a corner flip zone
+      if (coordinateSystem === 'page' && pageRef?.current && bookRef?.current) {
+        const pr  = pageRef.current.getBoundingClientRect()
+        const br  = bookRef.current.getBoundingClientRect()
+        const cs  = 90 // corner zone px — must match CSS .flipCorner size
+        // Photo half-width in px (use width for both axes as approximation)
+        const halfPx = (photo.width * photo.scale / 100) * pr.width / 2
+        // Photo center in absolute px on this page
+        const cx = pr.left + (newX / 100) * pr.width
+        const cy = pr.top  + (newY / 100) * pr.height
+        const inBL = cx - halfPx < pr.left  + cs && cy + halfPx > pr.bottom - cs
+        const inBR = cx + halfPx > pr.right - cs && cy + halfPx > pr.bottom - cs
+
+        if (inBL || inBR) {
+          window.removeEventListener('mousemove', onMove)
+          window.removeEventListener('mouseup',   onUp)
+          delete document.documentElement.dataset.dragging
+          setDragVisual(null)
+          const bx = ((ev.clientX - br.left) / br.width)  * 100
+          const by = ((ev.clientY - br.top)  / br.height) * 100
+          onEject?.({ x: bx, y: by })
+          return
+        }
+      }
+
+      currentX = newX
+      currentY = newY
       setDragVisual({ x: currentX, y: currentY })
     }
 
