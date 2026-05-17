@@ -138,21 +138,26 @@
 /* ---- Flip animation ---- */
 .flipper {
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  width: 50%;
   transform-style: preserve-3d;
   transition: transform 0.6s cubic-bezier(0.645, 0.045, 0.355, 1.000);
   pointer-events: none;
   z-index: 4;
   background: var(--cream);
   border-radius: 4px;
+  backface-visibility: hidden;
 }
 
 .flippingForward {
+  right: 0;
   transform: rotateY(-180deg);
   transform-origin: left center;
 }
 
 .flippingBack {
+  left: 0;
   transform: rotateY(180deg);
   transform-origin: right center;
 }
