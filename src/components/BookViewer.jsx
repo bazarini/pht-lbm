@@ -13,12 +13,15 @@ export default function BookViewer({
   onDeleteFloating,
   onEjectPhoto,
   onInjectPhoto,
+  onTransferPagePhoto, // (fromPageIdx, toPageIdx, photoId, coords) — move between pages
   onNextSpread,
 }) {
   const pages = album.pages ?? []
   const floatingPhotos = album.floatingPhotos ?? []
 
-  const totalSpreads = Math.max(1, Math.ceil(pages.length / 2) + 1)
+  // Cover spread uses pages[0]; each photo spread uses 2 pages.
+  // With N pages: covers ceil((N-1)/2) photo spreads.
+  const totalSpreads = Math.max(1, Math.ceil((pages.length - 1) / 2) + 1)
   const [spread, setSpread] = useState(0)
   const [flipping, setFlipping] = useState(null)
 
@@ -52,8 +55,13 @@ export default function BookViewer({
     setTimeout(() => {
       if (dir === 'forward') {
         const nextSpread = spread + 1
-        if (nextSpread >= totalSpreads && isEditing) {
-          onNextSpread?.()
+        if (isEditing) {
+          // Create pages if the target spread doesn't have them yet
+          const [nextLi, nextRi] = getSpreadPageIndices(nextSpread)
+          const needsNewPages = [nextLi, nextRi]
+            .filter((i) => i !== null && i !== undefined && i >= 0)
+            .some((i) => pages[i] === undefined)
+          if (needsNewPages) onNextSpread?.()
         }
         setSpread(nextSpread)
       } else {
@@ -61,9 +69,9 @@ export default function BookViewer({
       }
       setFlipping(null)
     }, 600)
-  }, [flipping, canNext, canPrev, spread, totalSpreads, isEditing, onNextSpread])
+  }, [flipping, canNext, canPrev, spread, pages, isEditing, onNextSpread])
 
-  function renderPageContents(pageIdx, pageRef) {
+  function renderPageContents(pageIdx, pageRef, siblingRef, siblingIdx) {
     if (pageIdx === null) return null // cover left side handled separately
     const page = pages[pageIdx]
     if (!page) return null
@@ -79,8 +87,14 @@ export default function BookViewer({
         onUpdate={(patch) => onUpdatePagePhoto(pageIdx, photo.id, patch)}
         onDelete={() => onDeletePagePhoto(pageIdx, photo.id)}
         onEject={(bookCoords) => onEjectPhoto(pageIdx, photo.id, bookCoords)}
+        onTransferToSibling={
+          siblingIdx != null
+            ? (coords) => onTransferPagePhoto?.(pageIdx, siblingIdx, photo.id, coords)
+            : undefined
+        }
         containerRef={pageRef}
         pageRef={pageRef}
+        siblingPageRef={siblingRef}
         bookRef={bookRef}
         coordinateSystem="page"
       />
@@ -108,7 +122,7 @@ export default function BookViewer({
                 <CoverLeft title={album.title} />
               ) : (
                 <>
-                  {renderPageContents(leftIdx, leftPageRef)}
+                  {renderPageContents(leftIdx, leftPageRef, rightPageRef, rightIdx)}
                   {pages[leftIdx] && <span className={styles.pageNum}>{leftIdx + 1}</span>}
                 </>
               )}
@@ -116,14 +130,8 @@ export default function BookViewer({
 
             {/* Right page */}
             <div ref={rightPageRef} className={`${styles.pageRight} ${isEditing ? styles.pageEditing : ''}`}>
-              {spread === 0 && pages[0] === undefined ? (
-                <EmptyPage isEditing={isEditing} />
-              ) : (
-                <>
-                  {renderPageContents(rightIdx, rightPageRef)}
-                  {pages[rightIdx] && <span className={styles.pageNum}>{rightIdx + 1}</span>}
-                </>
-              )}
+              {renderPageContents(rightIdx, rightPageRef, leftPageRef, leftIdx)}
+              {pages[rightIdx] && <span className={styles.pageNum}>{rightIdx + 1}</span>}
             </div>
           </div>
 
@@ -143,17 +151,16 @@ export default function BookViewer({
                 onUpdate={(patch) => onUpdateFloating(photo.id, patch)}
                 onDelete={() => onDeleteFloating(photo.id)}
                 onInject={(pageCoords) => {
-                  // Determine which page the cursor is on
-                  const lRect = leftPageRef.current?.getBoundingClientRect()
-                  const rRect = rightPageRef.current?.getBoundingClientRect()
-                  // Inject to right page by default (last spread page)
                   const targetIdx = rightIdx ?? leftIdx
-                  if (targetIdx !== null && targetIdx !== undefined) {
-                    onInjectPhoto(photo.id, targetIdx, pageCoords)
-                  }
+                  if (targetIdx != null) onInjectPhoto(photo.id, targetIdx, pageCoords)
+                }}
+                onTransferToSibling={(pageCoords) => {
+                  // Dropped on left page
+                  if (leftIdx != null && leftIdx >= 0) onInjectPhoto(photo.id, leftIdx, pageCoords)
                 }}
                 containerRef={bookRef}
                 pageRef={rightPageRef}
+                siblingPageRef={leftIdx != null && leftIdx >= 0 ? leftPageRef : null}
                 bookRef={bookRef}
                 coordinateSystem="book"
               />
