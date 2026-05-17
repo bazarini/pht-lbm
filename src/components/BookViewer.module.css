@@ -10,7 +10,7 @@
 
 .book {
   position: relative;
-  width: min(900px, 90vw);
+  width: min(1200px, 94vw);
   aspect-ratio: 2/1.3;
   transform-style: preserve-3d;
 }
