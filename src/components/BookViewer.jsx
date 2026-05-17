@@ -115,7 +115,9 @@ function PhotoPage({ page, pageNum, side }) {
   return (
     <>
       {page.photo ? (
-        <img className={styles.photo} src={page.photo} alt={page.caption || 'Фото'} />
+        <div className={styles.photoWrapper}>
+          <img className={styles.photo} src={page.photo} alt={page.caption || 'Фото'} />
+        </div>
       ) : (
         <div className={styles.photoEmpty}>Нет фото</div>
       )}

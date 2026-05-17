@@ -103,12 +103,18 @@
 }
 
 /* ---- Photo page ---- */
+.photoWrapper {
+  width: 100%;
+  padding: 10px;
+  background: #fff;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.18), inset 0 0 0 1px #e0d8c8;
+  border-radius: 2px;
+}
+
 .photo {
   width: 100%;
-  max-height: 65%;
+  max-height: 55%;
   object-fit: cover;
-  border-radius: 2px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
   display: block;
 }
 
