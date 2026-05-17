@@ -98,7 +98,13 @@
 }
 
 /* ---- Caption ---- */
+/* position: absolute so the caption doesn't contribute to wrapper height
+   and doesn't shift the translate(-50%,-50%) center point */
 .captionArea {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
   margin-top: 8px;
   text-align: center;
 }

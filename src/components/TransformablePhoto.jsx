@@ -1,25 +1,15 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import styles from './TransformablePhoto.module.css'
 
-/**
- * coordinateSystem: 'page' | 'book'
- *   page  — x/y are % of the page element
- *   book  — x/y are % of the book element (for floating photos)
- *
- * containerRef — ref to the page or book container for coordinate calculations
- * pageRef      — ref to the page element (only for 'page' mode, used for eject detection)
- * bookRef      — ref to the book element (only for 'page' mode, used for eject coords)
- */
 export default function TransformablePhoto({
   photo,
   isEditing,
   isSelected,
   onSelect,
-  onDeselect,
   onUpdate,
   onDelete,
-  onEject,    // (bookCoords: {x, y}) — called when dragged out of page
-  onInject,   // (pageIdx, pageCoords: {x, y}) — called when floating dragged into a page
+  onEject,
+  onInject,
   containerRef,
   pageRef,
   bookRef,
@@ -29,12 +19,21 @@ export default function TransformablePhoto({
   const [editingCaption, setEditingCaption] = useState(false)
   const [captionDraft, setCaptionDraft] = useState(photo.caption)
 
-  // Sync caption draft when photo changes externally
+  // Visual state during drag/resize/rotate — updated every frame,
+  // committed to store only on mouseup (avoid writing localStorage on every pixel)
+  const [dragVisual, setDragVisual] = useState(null)      // {x, y}
+  const [scaleVisual, setScaleVisual] = useState(null)    // number
+  const [rotVisual, setRotVisual] = useState(null)        // number
+
   useEffect(() => { setCaptionDraft(photo.caption) }, [photo.caption])
 
-  // ---- Drag ----
-  const dragState = useRef(null)
+  // Display values: visual during interaction, real otherwise
+  const dispX   = dragVisual?.x   ?? photo.x
+  const dispY   = dragVisual?.y   ?? photo.y
+  const dispSc  = scaleVisual     ?? photo.scale
+  const dispRot = rotVisual       ?? photo.rotation
 
+  // ---- Drag ----
   const handleDragStart = useCallback((e) => {
     if (!isEditing) return
     e.stopPropagation()
@@ -45,69 +44,61 @@ export default function TransformablePhoto({
     if (!container) return
     const rect = container.getBoundingClientRect()
 
-    dragState.current = {
-      startMouseX: e.clientX,
-      startMouseY: e.clientY,
-      startX: photo.x,
-      startY: photo.y,
-      containerRect: rect,
-    }
+    let currentX = photo.x
+    let currentY = photo.y
 
     const onMove = (ev) => {
-      if (!dragState.current) return
-      const { startMouseX, startMouseY, startX, startY, containerRect } = dragState.current
-      const dx = ((ev.clientX - startMouseX) / containerRect.width) * 100
-      const dy = ((ev.clientY - startMouseY) / containerRect.height) * 100
-      const newX = Math.max(0, Math.min(100, startX + dx))
-      const newY = Math.max(0, Math.min(100, startY + dy))
+      const dx = ((ev.clientX - e.clientX) / rect.width)  * 100
+      const dy = ((ev.clientY - e.clientY) / rect.height) * 100
+      currentX = photo.x + dx   // no clamping — let it go outside
+      currentY = photo.y + dy
+      setDragVisual({ x: currentX, y: currentY })
+    }
 
-      // Eject check (only for page photos)
+    const onUp = (ev) => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+      setDragVisual(null)
+
+      // Eject: cursor released outside page
       if (coordinateSystem === 'page' && pageRef?.current && bookRef?.current) {
         const pr = pageRef.current.getBoundingClientRect()
         const br = bookRef.current.getBoundingClientRect()
         const inside = ev.clientX >= pr.left && ev.clientX <= pr.right
                     && ev.clientY >= pr.top  && ev.clientY <= pr.bottom
         if (!inside) {
-          const bx = ((ev.clientX - br.left) / br.width) * 100
-          const by = ((ev.clientY - br.top)  / br.height) * 100
-          dragState.current = null
-          window.removeEventListener('mousemove', onMove)
-          window.removeEventListener('mouseup', onUp)
-          onEject?.({ x: Math.max(0, Math.min(100, bx)), y: Math.max(0, Math.min(100, by)) })
+          const bx = Math.max(2, Math.min(98, ((ev.clientX - br.left) / br.width)  * 100))
+          const by = Math.max(2, Math.min(98, ((ev.clientY - br.top)  / br.height) * 100))
+          onEject?.({ x: bx, y: by })
           return
         }
       }
 
-      // Inject check (only for floating photos)
+      // Inject: floating photo released inside a page
       if (coordinateSystem === 'book' && onInject && pageRef?.current) {
         const pr = pageRef.current.getBoundingClientRect()
         const inside = ev.clientX >= pr.left && ev.clientX <= pr.right
                     && ev.clientY >= pr.top  && ev.clientY <= pr.bottom
         if (inside) {
-          const px = ((ev.clientX - pr.left) / pr.width) * 100
-          const py = ((ev.clientY - pr.top)  / pr.height) * 100
-          dragState.current = null
-          window.removeEventListener('mousemove', onMove)
-          window.removeEventListener('mouseup', onUp)
-          onInject({ x: Math.max(0, Math.min(100, px)), y: Math.max(0, Math.min(100, py)) })
+          const px = Math.max(5, Math.min(95, ((ev.clientX - pr.left) / pr.width)  * 100))
+          const py = Math.max(5, Math.min(95, ((ev.clientY - pr.top)  / pr.height) * 100))
+          onInject({ x: px, y: py })
           return
         }
       }
 
-      onUpdate({ x: newX, y: newY })
-    }
-
-    const onUp = () => {
-      dragState.current = null
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup', onUp)
+      // Normal: commit clamped position
+      onUpdate({
+        x: Math.max(0, Math.min(100, currentX)),
+        y: Math.max(0, Math.min(100, currentY)),
+      })
     }
 
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
   }, [isEditing, photo.x, photo.y, coordinateSystem, containerRef, pageRef, bookRef, onSelect, onUpdate, onEject, onInject])
 
-  // ---- Resize (corner handles) ----
+  // ---- Resize ----
   const handleResizeStart = useCallback((e) => {
     e.stopPropagation()
     e.preventDefault()
@@ -116,18 +107,21 @@ export default function TransformablePhoto({
     if (!wrapper) return
     const rect = wrapper.getBoundingClientRect()
     const cx = rect.left + rect.width / 2
-    const cy = rect.top + rect.height / 2
-    const initDist = Math.hypot(e.clientX - cx, e.clientY - cy)
+    const cy = rect.top  + rect.height / 2
+    const initDist  = Math.hypot(e.clientX - cx, e.clientY - cy)
     const initScale = photo.scale
+    let lastScale = initScale
 
     const onMove = (ev) => {
       const dist = Math.hypot(ev.clientX - cx, ev.clientY - cy)
-      const newScale = Math.max(0.3, Math.min(4, (dist / initDist) * initScale))
-      onUpdate({ scale: newScale })
+      lastScale = Math.max(0.2, Math.min(5, (dist / initDist) * initScale))
+      setScaleVisual(lastScale)
     }
     const onUp = () => {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
+      setScaleVisual(null)
+      onUpdate({ scale: lastScale })
     }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
@@ -142,19 +136,22 @@ export default function TransformablePhoto({
     if (!wrapper) return
     const rect = wrapper.getBoundingClientRect()
     const cx = rect.left + rect.width / 2
-    const cy = rect.top + rect.height / 2
+    const cy = rect.top  + rect.height / 2
+    let lastAngle = photo.rotation
 
     const onMove = (ev) => {
-      const angle = Math.atan2(ev.clientY - cy, ev.clientX - cx) * (180 / Math.PI) + 90
-      onUpdate({ rotation: Math.round(angle) })
+      lastAngle = Math.round(Math.atan2(ev.clientY - cy, ev.clientX - cx) * (180 / Math.PI) + 90)
+      setRotVisual(lastAngle)
     }
     const onUp = () => {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
+      setRotVisual(null)
+      onUpdate({ rotation: lastAngle })
     }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
-  }, [onUpdate])
+  }, [photo.rotation, onUpdate])
 
   // ---- Caption ----
   function commitCaption() {
@@ -167,22 +164,22 @@ export default function TransformablePhoto({
       ref={wrapperRef}
       className={styles.wrapper}
       style={{
-        left: `${photo.x}%`,
-        top: `${photo.y}%`,
+        left: `${dispX}%`,
+        top:  `${dispY}%`,
         width: `${photo.width}%`,
-        transform: `translate(-50%, -50%) scale(${photo.scale}) rotate(${photo.rotation}deg)`,
+        transform: `translate(-50%, -50%) scale(${dispSc}) rotate(${dispRot}deg)`,
         cursor: isEditing ? (isSelected ? 'move' : 'pointer') : 'default',
         zIndex: isSelected ? 15 : 10,
       }}
       onMouseDown={isEditing ? handleDragStart : undefined}
       onClick={isEditing ? (e) => { e.stopPropagation(); onSelect() } : undefined}
     >
+      {/* Frame + handles */}
       <div className={`${styles.inner} ${isSelected ? styles.selected : ''}`}>
         <div className={styles.frame}>
           <img src={photo.src} alt={photo.caption || ''} draggable={false} />
         </div>
 
-        {/* Handles — only when selected in edit mode */}
         {isEditing && isSelected && (
           <>
             <div className={`${styles.handle} ${styles.handleTL}`} onMouseDown={handleResizeStart} />
@@ -200,7 +197,7 @@ export default function TransformablePhoto({
         )}
       </div>
 
-      {/* Caption */}
+      {/* Caption — absolutely positioned so it doesn't affect wrapper height/centering */}
       {isEditing ? (
         <div className={styles.captionArea} onMouseDown={(e) => e.stopPropagation()}>
           {editingCaption ? (
@@ -210,14 +207,19 @@ export default function TransformablePhoto({
               autoFocus
               onChange={(e) => setCaptionDraft(e.target.value)}
               onBlur={commitCaption}
-              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); commitCaption() } }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); commitCaption() }
+              }}
             />
           ) : (
             <p
               className={styles.captionText}
               onClick={(e) => { e.stopPropagation(); setEditingCaption(true) }}
             >
-              {photo.caption || <span className={styles.captionPlaceholder}>Подпись...</span>}
+              {photo.caption
+                ? photo.caption
+                : <span className={styles.captionPlaceholder}>Подпись...</span>
+              }
             </p>
           )}
         </div>

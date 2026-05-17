@@ -102,7 +102,7 @@ export default function BookViewer({
             {/* Left page */}
             <div
               ref={leftPageRef}
-              className={`${styles.pageLeft} ${spread === 0 ? styles.cover : ''}`}
+              className={`${styles.pageLeft} ${spread === 0 ? styles.cover : ''} ${isEditing ? styles.pageEditing : ''}`}
             >
               {spread === 0 ? (
                 <CoverLeft title={album.title} />
@@ -115,7 +115,7 @@ export default function BookViewer({
             </div>
 
             {/* Right page */}
-            <div ref={rightPageRef} className={styles.pageRight}>
+            <div ref={rightPageRef} className={`${styles.pageRight} ${isEditing ? styles.pageEditing : ''}`}>
               {spread === 0 && pages[0] === undefined ? (
                 <EmptyPage isEditing={isEditing} />
               ) : (

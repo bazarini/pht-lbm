@@ -41,7 +41,12 @@
   height: 100%;
   background: var(--cream);
   position: relative;
-  overflow: hidden;
+  overflow: hidden; /* overridden by .pageEditing in edit mode */
+}
+
+/* In edit mode photos can extend visually outside the page bounds */
+.pageEditing {
+  overflow: visible;
 }
 
 .pageLeft {
