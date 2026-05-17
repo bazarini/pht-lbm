@@ -47,6 +47,24 @@
   text-overflow: ellipsis;
 }
 
+.titleInput {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #7a6a55;
+  color: var(--cream);
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  padding: 2px 0;
+  outline: none;
+  width: 240px;
+  transition: border-color 0.15s;
+}
+
+.titleInput:focus {
+  border-bottom-color: var(--cream);
+}
+
 /* ---- Header right ---- */
 .headerActions {
   display: flex;

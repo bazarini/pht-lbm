@@ -191,7 +191,16 @@ export default function ViewerPage() {
       <header className={styles.header}>
         <div className={styles.headerLeft}>
           <button className={styles.btnBack} onClick={() => navigate('/')}>←</button>
-          <span className={styles.title}>{album.title}</span>
+          {isEditing ? (
+            <input
+              className={styles.titleInput}
+              value={album.title}
+              onChange={(e) => updateAlbum(id, { title: e.target.value })}
+              placeholder="Название альбома"
+            />
+          ) : (
+            <span className={styles.title}>{album.title}</span>
+          )}
         </div>
 
         <div className={styles.headerActions}>
