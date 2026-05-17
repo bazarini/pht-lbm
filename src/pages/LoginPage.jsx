@@ -41,6 +41,7 @@ export default function LoginPage() {
     <div className={styles.page}>
       <div className={styles.card}>
         <h1 className={styles.title}>PhotoBook</h1>
+        <p className={styles.slogan}>True memories across time</p>
         <p className={styles.subtitle}>Войдите в свой аккаунт</p>
 
         <form className={styles.form} onSubmit={handleSubmit}>
