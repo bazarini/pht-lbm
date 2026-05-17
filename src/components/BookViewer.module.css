@@ -41,7 +41,7 @@
   height: 100%;
   background: var(--cream);
   position: relative;
-  overflow: hidden; /* overridden by .pageEditing in edit mode */
+  overflow: visible; /* corners and fold animation need to be visible */
 }
 
 /* In edit mode photos can extend visually outside the page bounds */
@@ -92,20 +92,92 @@
   color: #c4b49a;
 }
 
-/* Page number */
-.pageNum {
+/* ---- Corner flip zones (page number + click target) ---- */
+.flipCorner {
   position: absolute;
-  bottom: 14px;
-  font-size: 11px;
-  color: #c4b49a;
+  bottom: 0;
+  width: 90px;
+  height: 90px;
+  z-index: 20;
+  pointer-events: none;
+  overflow: hidden; /* clip the fold div */
+}
+
+.flipCornerLeft  { left: 0; }
+.flipCornerRight { right: 0; }
+
+.flipCornerActive {
+  pointer-events: all;
+  cursor: pointer;
+}
+
+/* Current page number — sits in the corner, hidden by the fold on hover */
+.cornerNum {
+  position: absolute;
+  z-index: 2;
+  font-size: 16px;
+  color: #8a7a65;
   font-family: var(--font-display);
   font-style: italic;
   pointer-events: none;
-  z-index: 1;
+  line-height: 1;
+  transition: opacity 0.18s ease;
 }
 
-.pageLeft .pageNum { left: 20px; }
-.pageRight .pageNum { right: 20px; }
+.flipCornerLeft  .cornerNum { bottom: 18px; left: 18px; }
+.flipCornerRight .cornerNum { bottom: 18px; right: 18px; }
+
+/* Hide current number when fold is open */
+.flipCornerActive:hover .cornerNum { opacity: 0; }
+
+/* ---- Fold div (clip-path triangle, can contain text) ---- */
+.cornerFold {
+  position: absolute;
+  bottom: 0;
+  width: 0;
+  height: 0;
+  background: #e8e0d4;
+  box-shadow: -3px -3px 8px rgba(0,0,0,0.14);
+  transition: width 0.25s ease, height 0.25s ease;
+  overflow: hidden;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.flipCornerLeft  .cornerFold {
+  left: 0;
+  clip-path: polygon(0% 0%, 100% 100%, 0% 100%);
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+
+.flipCornerRight .cornerFold {
+  right: 0;
+  clip-path: polygon(100% 0%, 100% 100%, 0% 100%);
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.flipCornerActive:hover .cornerFold {
+  width: 90px;
+  height: 90px;
+}
+
+/* Peek number inside the fold */
+.cornerFoldNum {
+  position: absolute;
+  font-size: 18px;
+  font-family: var(--font-display);
+  font-style: italic;
+  color: #7a6a58;
+  pointer-events: none;
+  line-height: 1;
+}
+
+.flipCornerLeft  .cornerFoldNum { bottom: 14px; left: 14px; transform: rotate(0deg); }
+.flipCornerRight .cornerFoldNum { bottom: 14px; right: 14px; transform: rotate(0deg); }
 
 /* Empty page hint */
 .emptyPage {
@@ -162,43 +234,3 @@
   transform-origin: right center;
 }
 
-/* ---- Navigation ---- */
-.nav {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  padding: 0 0 32px;
-}
-
-.navBtn {
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.15);
-  color: #c4b49a;
-  border-radius: 50%;
-  width: 44px;
-  height: 44px;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s, color 0.15s;
-}
-
-.navBtn:hover:not(:disabled) {
-  background: rgba(255,255,255,0.15);
-  color: var(--cream);
-}
-
-.navBtn:disabled {
-  opacity: 0.25;
-  cursor: default;
-}
-
-.navInfo {
-  font-size: 13px;
-  color: #7a6a55;
-  font-family: var(--font-display);
-  font-style: italic;
-  min-width: 100px;
-  text-align: center;
-}
