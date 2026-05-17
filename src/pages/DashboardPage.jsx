@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useAuthStore from '../store/authStore'
 import useAlbumStore from '../store/albumStore'
@@ -8,15 +9,22 @@ export default function DashboardPage() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
+
+  const loading = useAlbumStore((s) => s.loading)
+  const fetchAlbums = useAlbumStore((s) => s.fetchAlbums)
   const createAlbum = useAlbumStore((s) => s.createAlbum)
   const deleteAlbum = useAlbumStore((s) => s.deleteAlbum)
   const getUserAlbums = useAlbumStore((s) => s.getUserAlbums)
 
+  useEffect(() => {
+    if (user?.id) fetchAlbums(user.id)
+  }, [user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const albums = getUserAlbums(user.id)
 
-  function handleCreate() {
-    const album = createAlbum(user.id)
-    navigate(`/album/${album.id}/view`)
+  async function handleCreate() {
+    const album = await createAlbum(user.id)
+    if (album) navigate(`/album/${album.id}/view`)
   }
 
   function handleLogout() {
@@ -39,12 +47,16 @@ export default function DashboardPage() {
       <main className={styles.main}>
         <div className={styles.toolbar}>
           <h1 className={styles.heading}>Мои альбомы</h1>
-          <button className={styles.btnCreate} onClick={handleCreate}>
+          <button className={styles.btnCreate} onClick={handleCreate} disabled={loading}>
             + Создать альбом
           </button>
         </div>
 
-        {albums.length === 0 ? (
+        {loading && albums.length === 0 ? (
+          <div className={styles.empty}>
+            <p className={styles.emptyTitle}>Загрузка…</p>
+          </div>
+        ) : albums.length === 0 ? (
           <div className={styles.empty}>
             <p className={styles.emptyTitle}>Пока нет альбомов</p>
             <p className={styles.emptyText}>Создайте первый альбом и наполните его воспоминаниями</p>

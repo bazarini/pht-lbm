@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import useAlbumStore from '../store/albumStore'
 import BookViewer from '../components/BookViewer'
+import { uploadPhoto } from '../services/db'
 import styles from './ViewerPage.module.css'
 
 export default function ViewerPage() {
@@ -16,6 +17,7 @@ export default function ViewerPage() {
   const [isEditing, setIsEditing] = useState(false)
   const [history, setHistory] = useState([])
   const [selectedId, setSelectedId] = useState(null)
+  const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef(null)
 
   if (!album) {
@@ -54,16 +56,18 @@ export default function ViewerPage() {
     return null
   }
 
-  function handleFileChange(e) {
+  async function handleFileChange(e) {
     const file = e.target.files[0]
     if (!file) return
     e.target.value = ''
-    const reader = new FileReader()
-    reader.onload = (ev) => {
+
+    setUploading(true)
+    try {
+      const src = await uploadPhoto(file)
       saveHistory()
       const newPhoto = {
         id: crypto.randomUUID(),
-        src: ev.target.result,
+        src,
         caption: '',
         scale: 1.0,
         rotation: 0,
@@ -86,8 +90,12 @@ export default function ViewerPage() {
           floatingPhotos: [...(album.floatingPhotos ?? []), floating],
         })
       }
+    } catch (err) {
+      console.error('Upload failed:', err)
+      alert('Ошибка загрузки фото: ' + err.message)
+    } finally {
+      setUploading(false)
     }
-    reader.readAsDataURL(file)
   }
 
   // ---- Update / delete page photo ----
@@ -222,8 +230,9 @@ export default function ViewerPage() {
               <button
                 className={styles.btnAction}
                 onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
               >
-                + Фото
+                {uploading ? 'Загрузка…' : '+ Фото'}
               </button>
               <input
                 type="file"
