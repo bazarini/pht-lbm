@@ -1,0 +1,6 @@
+node_modules/
+dist/
+*.json.bak
+*firebase-adminsdk*.json
+.env
+.env.local
