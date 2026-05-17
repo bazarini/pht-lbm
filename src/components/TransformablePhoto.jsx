@@ -57,29 +57,17 @@ export default function TransformablePhoto({
       const newX = photo.x + dx
       const newY = photo.y + dy
 
-      // Eject if the photo's physical bounds overlap a corner flip zone
-      if (coordinateSystem === 'page' && pageRef?.current && bookRef?.current) {
-        const pr  = pageRef.current.getBoundingClientRect()
-        const br  = bookRef.current.getBoundingClientRect()
-        const cs  = 90 // corner zone px — must match CSS .flipCorner size
-        // Photo half-width in px (use width for both axes as approximation)
+      // Skip update if photo's physical bounds overlap a corner flip zone
+      if (coordinateSystem === 'page' && pageRef?.current) {
+        const pr     = pageRef.current.getBoundingClientRect()
+        const cs     = 90 // px — matches CSS .flipCorner size
         const halfPx = (photo.width * photo.scale / 100) * pr.width / 2
-        // Photo center in absolute px on this page
-        const cx = pr.left + (newX / 100) * pr.width
-        const cy = pr.top  + (newY / 100) * pr.height
-        const inBL = cx - halfPx < pr.left  + cs && cy + halfPx > pr.bottom - cs
-        const inBR = cx + halfPx > pr.right - cs && cy + halfPx > pr.bottom - cs
-
-        if (inBL || inBR) {
-          window.removeEventListener('mousemove', onMove)
-          window.removeEventListener('mouseup',   onUp)
-          delete document.documentElement.dataset.dragging
-          setDragVisual(null)
-          const bx = ((ev.clientX - br.left) / br.width)  * 100
-          const by = ((ev.clientY - br.top)  / br.height) * 100
-          onEject?.({ x: bx, y: by })
-          return
-        }
+        const cx     = pr.left + (newX / 100) * pr.width
+        const cy     = pr.top  + (newY / 100) * pr.height
+        if (
+          (cx - halfPx < pr.left  + cs || cx + halfPx > pr.right - cs) &&
+          cy + halfPx > pr.bottom - cs
+        ) return
       }
 
       currentX = newX
