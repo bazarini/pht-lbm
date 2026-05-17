@@ -46,6 +46,8 @@ export default function TransformablePhoto({
     if (!container) return
     const rect = container.getBoundingClientRect()
 
+    document.documentElement.dataset.dragging = '1'
+
     let currentX = photo.x
     let currentY = photo.y
 
@@ -60,6 +62,7 @@ export default function TransformablePhoto({
     const onUp = (ev) => {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
+      delete document.documentElement.dataset.dragging
       setDragVisual(null)
 
       // Eject / transfer: cursor released outside the home page
