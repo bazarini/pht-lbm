@@ -41,7 +41,7 @@
   height: 100%;
   background: var(--cream);
   position: relative;
-  overflow: hidden; /* overridden by .pageEditing in edit mode */
+  overflow: visible; /* corners and fold animation need to be visible */
 }
 
 /* In edit mode photos can extend visually outside the page bounds */
@@ -113,15 +113,17 @@
 
 .cornerNum {
   position: absolute;
-  font-size: 11px;
-  color: #b8a890;
+  z-index: 2;
+  font-size: 12px;
+  color: #8a7a65;
   font-family: var(--font-display);
   font-style: italic;
   pointer-events: none;
+  line-height: 1;
 }
 
-.flipCornerLeft  .cornerNum { bottom: 13px; left: 16px; }
-.flipCornerRight .cornerNum { bottom: 13px; right: 16px; }
+.flipCornerLeft  .cornerNum { bottom: 13px; left: 14px; }
+.flipCornerRight .cornerNum { bottom: 13px; right: 14px; }
 
 /* ---- Corner fold animation on hover ---- */
 .flipCornerActive::after {
