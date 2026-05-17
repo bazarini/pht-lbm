@@ -49,6 +49,7 @@ export default function RegisterPage() {
     <div className={styles.page}>
       <div className={styles.card}>
         <h1 className={styles.title}>PhotoBook</h1>
+        <p className={styles.slogan}>True memories across time</p>
         <p className={styles.subtitle}>Создайте аккаунт</p>
 
         {success ? (
