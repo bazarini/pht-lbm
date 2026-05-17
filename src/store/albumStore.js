@@ -14,7 +14,7 @@ const useAlbumStore = create((set, get) => ({
       id: crypto.randomUUID(),
       userId,
       title: 'Новый альбом',
-      pages: [],
+      pages: [{ id: crypto.randomUUID(), photos: [] }],
       floatingPhotos: [],
       createdAt: Date.now(),
     }
