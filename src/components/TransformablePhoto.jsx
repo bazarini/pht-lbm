@@ -191,6 +191,23 @@ export default function TransformablePhoto({
     window.addEventListener('mouseup', onUp)
   }, [photo.rotation, onUpdate])
 
+  // ---- Download ----
+  async function handleDownload(e) {
+    e.stopPropagation()
+    try {
+      const res = await fetch(photo.src)
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = photo.caption || 'photo'
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Download failed:', err)
+    }
+  }
+
   // ---- Caption ----
   function commitCaption() {
     setEditingCaption(false)
@@ -227,11 +244,26 @@ export default function TransformablePhoto({
             <div className={styles.rotateLine} />
             <div className={styles.rotateHandle} onMouseDown={handleRotateStart}>↻</div>
             <button
+              className={styles.downloadBtn}
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={handleDownload}
+              title="Скачать"
+            >↓</button>
+            <button
               className={styles.deleteBtn}
               onMouseDown={(e) => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); onDelete() }}
             >×</button>
           </>
+        )}
+
+        {!isEditing && (
+          <button
+            className={styles.downloadHover}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={handleDownload}
+            title="Скачать"
+          >↓</button>
         )}
       </div>
 
