@@ -10,17 +10,17 @@ export default function DashboardPage() {
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
 
-  const loading = useAlbumStore((s) => s.loading)
+  const loading     = useAlbumStore((s) => s.loading)
   const fetchAlbums = useAlbumStore((s) => s.fetchAlbums)
   const createAlbum = useAlbumStore((s) => s.createAlbum)
   const deleteAlbum = useAlbumStore((s) => s.deleteAlbum)
-  const getUserAlbums = useAlbumStore((s) => s.getUserAlbums)
+  // Subscribe directly to the filtered array so the component re-renders
+  // whenever albums change (getUserAlbums returns a stable function ref — not reactive)
+  const albums = useAlbumStore((s) => s.albums.filter((a) => a.userId === user.id))
 
   useEffect(() => {
     if (user?.id) fetchAlbums(user.id)
   }, [user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const albums = getUserAlbums(user.id)
 
   async function handleCreate() {
     const album = await createAlbum(user.id)
