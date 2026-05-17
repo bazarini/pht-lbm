@@ -46,20 +46,39 @@ export default function TransformablePhoto({
     if (!container) return
     const rect = container.getBoundingClientRect()
 
+    document.documentElement.dataset.dragging = '1'
+
     let currentX = photo.x
     let currentY = photo.y
 
     const onMove = (ev) => {
       const dx = ((ev.clientX - e.clientX) / rect.width)  * 100
       const dy = ((ev.clientY - e.clientY) / rect.height) * 100
-      currentX = photo.x + dx   // no clamping — let it go outside
-      currentY = photo.y + dy
+      const newX = photo.x + dx
+      const newY = photo.y + dy
+
+      // Skip update if photo's physical bounds overlap a corner flip zone
+      if (coordinateSystem === 'page' && pageRef?.current) {
+        const pr     = pageRef.current.getBoundingClientRect()
+        const cs     = 90 // px — matches CSS .flipCorner size
+        const halfPx = (photo.width * photo.scale / 100) * pr.width / 2
+        const cx     = pr.left + (newX / 100) * pr.width
+        const cy     = pr.top  + (newY / 100) * pr.height
+        if (
+          (cx - halfPx < pr.left  + cs || cx + halfPx > pr.right - cs) &&
+          cy + halfPx > pr.bottom - cs
+        ) return
+      }
+
+      currentX = newX
+      currentY = newY
       setDragVisual({ x: currentX, y: currentY })
     }
 
     const onUp = (ev) => {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
+      delete document.documentElement.dataset.dragging
       setDragVisual(null)
 
       // Eject / transfer: cursor released outside the home page

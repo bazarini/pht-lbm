@@ -98,7 +98,7 @@
   bottom: 0;
   width: 90px;
   height: 90px;
-  z-index: 20;
+  z-index: 8; /* below photos (z-index 10+) — photos block hover, appear above corner */
   pointer-events: none;
   overflow: hidden; /* clip the fold div */
 }
@@ -129,6 +129,15 @@
 
 /* Hide current number when fold is open */
 .flipCornerActive:hover .cornerNum { opacity: 0; }
+
+/* Suppress fold hover while a photo drag is in progress */
+:global([data-dragging]) .flipCornerActive:hover .cornerFold {
+  width: 0 !important;
+  height: 0 !important;
+}
+:global([data-dragging]) .flipCornerActive:hover .cornerNum {
+  opacity: 1 !important;
+}
 
 /* ---- Fold div (clip-path triangle, can contain text) ---- */
 .cornerFold {
