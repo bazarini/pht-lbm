@@ -1,40 +1,63 @@
 import { create } from 'zustand'
-import { getAlbums, saveAlbums } from '../utils/storage'
+import * as db from '../services/db'
 
 const useAlbumStore = create((set, get) => ({
-  albums: getAlbums(),
+  albums: [],
+  loading: false,
 
-  _persist: (albums) => {
-    saveAlbums(albums)
-    set({ albums })
+  // ---- Fetch ----
+  fetchAlbums: async (userId) => {
+    set({ loading: true })
+    try {
+      const albums = await db.getAlbums(userId)
+      set({ albums, loading: false })
+    } catch (err) {
+      console.error('fetchAlbums:', err)
+      set({ loading: false })
+    }
   },
 
-  createAlbum: (userId) => {
-    const album = {
-      id: crypto.randomUUID(),
-      userId,
+  // ---- Create ----
+  createAlbum: async (userId) => {
+    const albumData = {
       title: 'Новый альбом',
       pages: [{ id: crypto.randomUUID(), photos: [] }],
       floatingPhotos: [],
-      createdAt: Date.now(),
     }
-    const albums = [...get().albums, album]
-    get()._persist(albums)
-    return album
+    try {
+      const album = await db.createAlbum(userId, albumData)
+      set((s) => ({ albums: [album, ...s.albums] }))
+      return album
+    } catch (err) {
+      console.error('createAlbum:', err)
+      return null
+    }
   },
 
-  deleteAlbum: (id) => {
-    const albums = get().albums.filter((a) => a.id !== id)
-    get()._persist(albums)
+  // ---- Delete (optimistic) ----
+  deleteAlbum: async (id) => {
+    set((s) => ({ albums: s.albums.filter((a) => a.id !== id) }))
+    try {
+      await db.deleteAlbum(id)
+    } catch (err) {
+      console.error('deleteAlbum:', err)
+    }
   },
 
-  updateAlbum: (id, patch) => {
-    const albums = get().albums.map((a) => (a.id === id ? { ...a, ...patch } : a))
-    get()._persist(albums)
+  // ---- Update (optimistic) ----
+  updateAlbum: async (id, patch) => {
+    set((s) => ({
+      albums: s.albums.map((a) => (a.id === id ? { ...a, ...patch } : a)),
+    }))
+    try {
+      await db.updateAlbum(id, patch)
+    } catch (err) {
+      console.error('updateAlbum:', err)
+    }
   },
 
+  // ---- Selectors ----
   getAlbum: (id) => get().albums.find((a) => a.id === id) || null,
-
   getUserAlbums: (userId) => get().albums.filter((a) => a.userId === userId),
 }))
 
