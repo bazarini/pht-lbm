@@ -103,6 +103,39 @@ export default function BookViewer({
 
   const flipClass = flipping === 'forward' ? styles.flippingForward : styles.flippingBack
 
+  // Render page photos without any editing interactivity —
+  // used on the flipper face and the revealed-page layer.
+  function renderStaticPhotos(pageIdx) {
+    if (pageIdx == null || pageIdx < 0) return null
+    const page = pages[pageIdx]
+    if (!page) return null
+    return (page.photos ?? []).map((photo) => (
+      <div
+        key={photo.id}
+        style={{
+          position: 'absolute',
+          left: `${photo.x}%`,
+          top:  `${photo.y}%`,
+          width: `${photo.width}%`,
+          transform: `translate(-50%,-50%) scale(${photo.scale}) rotate(${photo.rotation}deg)`,
+          pointerEvents: 'none',
+          zIndex: 10,
+        }}
+      >
+        <div style={{ background:'#fff', padding:'8px', borderRadius:'2px',
+                      boxShadow:'0 2px 16px rgba(0,0,0,0.18)' }}>
+          <img src={photo.src} style={{ width:'100%', display:'block' }} draggable={false} alt="" />
+        </div>
+      </div>
+    ))
+  }
+
+  // Index of the page revealed as the flipper rotates away,
+  // and which half it appears on.
+  const revealedPageIdx = flipping === 'forward'
+    ? rightIdx + 1                          // new left page appears on right half
+    : getSpreadPageIndices(spread - 1)[0]   // old right → dest left page on left half
+
   return (
     <>
       <div className={styles.scene}>
@@ -194,8 +227,31 @@ export default function BookViewer({
           {/* Spine shadow */}
           <div className={styles.spineShadow} />
 
-          {/* Flip animation overlay */}
-          {flipping && <div className={`${styles.flipper} ${flipClass}`} />}
+          {/* ---- Flip animation ---- */}
+          {flipping && (
+            <>
+              {/* Page revealed under the flipper as it rotates away */}
+              <div className={`
+                ${styles.flipReveal}
+                ${flipping === 'forward' ? styles.flipRevealRight : styles.flipRevealLeft}
+                ${revealedPageIdx === null ? styles.cover : ''}
+              `}>
+                {revealedPageIdx === null
+                  ? <CoverLeft title={album.title} />
+                  : renderStaticPhotos(revealedPageIdx)
+                }
+              </div>
+
+              {/* The turning page — front shows real content, back is paper underside */}
+              <div className={`${styles.flipper} ${flipClass}`}>
+                <div className={styles.flipFront}>
+                  {renderStaticPhotos(flipping === 'forward' ? rightIdx : leftIdx)}
+                  <div className={styles.flipFrontShade} />
+                </div>
+                <div className={styles.flipBack} />
+              </div>
+            </>
+          )}
         </div>
       </div>
 
